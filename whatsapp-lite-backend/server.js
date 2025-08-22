@@ -14,11 +14,15 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// Middleware
 app.use(cookieParser());
-app.use(cors({
-    origin: process.env.FRONTEND_URL, 
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL, // e.g. http://localhost:3000
     credentials: true, 
-  }));
+  })
+);
 app.use(express.json());
 
 // Routes
@@ -26,14 +30,17 @@ app.use("/api/auth", authRoutes);
 // app.use("/api/chats", chatRoutes);
 // app.use("/api/messages", messageRoutes);
 
-// Server + Socket
+// Server + Socket.io
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
+    origin: process.env.FRONTEND_URL, 
+    credentials: true, 
     methods: ["GET", "POST"],
   },
 });
+app.set("io", io); // <-- Make io available in controllers
+
 
 initSocket(io);
 
