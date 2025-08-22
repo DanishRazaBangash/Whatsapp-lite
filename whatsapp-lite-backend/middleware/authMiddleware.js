@@ -3,8 +3,7 @@ import User from "../models/User.js";
 
 export const protect = async (req, res, next) => {
   try {
-    const auth = req.headers.authorization || "";
-    const token = auth.startsWith("Bearer ") ? auth.split(" ")[1] : null;
+    const token = req.cookies.jwt;
 
     if (!token) {
       return res.status(401).json({ message: "Not authorized, no token" });
