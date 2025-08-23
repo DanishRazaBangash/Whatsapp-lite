@@ -48,11 +48,13 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { emailOrUsername, password } = req.body;
+    const { email, username, password } = req.body;
+const emailOrUsername = email || username;
 
-    if (!emailOrUsername || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
+if (!emailOrUsername || !password) {
+  return res.status(400).json({ message: "All fields are required" });
+}
+
 
     const user = await User.findOne({
       $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
@@ -71,8 +73,12 @@ export const login = async (req, res) => {
 };
 
 export const me = async (req, res) => {
-  return res.json({ user: req.user });
-};
+ try {
+    const user = await User.findById(req.user.id).select("-password");
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }};
 
 // Logout = clear cookie
 export const logout = (req, res) => {
