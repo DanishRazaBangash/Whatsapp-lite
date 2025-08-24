@@ -5,10 +5,13 @@ import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import connectDB from "./config/db.js";
-import authRoutes from "./routes/authRoutes.js";
-// import chatRoutes from "./routes/chatRoutes.js";
-// import messageRoutes from "./routes/messageRoutes.js";
 import initSocket from "./socket.js";
+
+//import routes
+import authRoutes from "./routes/authRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -19,7 +22,7 @@ const app = express();
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL, // e.g. http://localhost:3000
+    origin: process.env.FRONTEND_URL, 
     credentials: true, 
   })
 );
@@ -27,8 +30,10 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
-// app.use("/api/chats", chatRoutes);
-// app.use("/api/messages", messageRoutes);
+app.use("/api/chats", chatRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/users", userRoutes);
+
 
 // Server + Socket.io
 const httpServer = createServer(app);
@@ -38,6 +43,10 @@ const io = new Server(httpServer, {
     credentials: true, 
     methods: ["GET", "POST"],
   },
+});
+app.use((req, res, next) => {
+  req.io = io;
+  next();
 });
 app.set("io", io); // <-- Make io available in controllers
 

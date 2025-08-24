@@ -1,37 +1,49 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+// src/App.jsx
+import { Routes, Route } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "./context/AuthContext";
+import { SocketProvider } from "./context/SocketContext";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Chat from "./pages/Chat";
-import { AuthProvider, AuthContext } from "./context/AuthContext";
-import { SocketProvider } from "./context/SocketContext";
-import { useContext } from "react";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-const PrivateRoute = ({ children }) => {
-  const { user } = useContext(AuthContext);
-  return user ? children : <Navigate to="/login" />;
-};
+export default function App() {
+  const { user, loading } = useContext(AuthContext);
 
-function App() {
-  return (
-    <AuthProvider>
+  // Block the app until /auth/me finishes
+  if (loading) {
+    return <div className="text-center mt-10">Loading...</div>;
+  }
+
+  // When logged in, wrap the app (or protected area) with SocketProvider
+  if (user) {
+    return (
       <SocketProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Chat />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
+        <Routes>
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<Chat />} />
+        </Routes>
       </SocketProvider>
-    </AuthProvider>
+    );
+  }
+
+  // When logged out, render public routes (no SocketProvider)
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="*" element={<Login />} />
+    </Routes>
   );
 }
-
-export default App;
